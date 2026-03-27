@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Filter, ChevronDown, FileText, FileDown, Search, Edit, ZoomIn, ZoomOut, Maximize2, X, LogOut, LogIn } from 'lucide-react';
+import { Plus, Trash2, Filter, ChevronDown, FileText, FileDown, Search, Edit, ZoomIn, ZoomOut, Maximize2, X, Upload, Download } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuCheckboxItem, 
@@ -22,11 +22,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { exportToWord } from './utils/exportWord';
-import { 
-  auth, db, loginWithGoogle, logout, onAuthStateChanged, 
-  doc, setDoc, getDoc, collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, 
-  handleFirestoreError, OperationType, User, getDocs, writeBatch
-} from './firebase';
+import * as XLSX from 'xlsx';
 
 interface Person {
   id: string;
@@ -50,49 +46,19 @@ const INITIAL_PEOPLE: Person[] = [
   },
   {
     id: '3',
-    name: 'Nguyễn Văn A',
-    cccd: '012345678901',
+    name: 'Nguyễn Việt Dũng',
+    cccd: '079086033564',
     certificate: 'Chứng chỉ đấu thầu số 123/2024 do Bộ Kế hoạch và Đầu tư cấp',
-  },
-  {
-    id: '4',
-    name: 'Trần Thị B',
-    cccd: '012345678902',
-    certificate: 'Chứng chỉ đấu thầu số 456/2024 do Bộ Kế hoạch và Đầu tư cấp',
-  },
-  {
-    id: '5',
-    name: 'Lê Văn C',
-    cccd: '012345678903',
-    certificate: 'Chứng chỉ đấu thầu số 789/2024 do Bộ Kế hoạch và Đầu tư cấp',
-  },
-  {
-    id: '6',
-    name: 'Phạm Văn D',
-    cccd: '012345678904',
-    certificate: 'Chứng chỉ đấu thầu số 101/2024 do Bộ Kế hoạch và Đầu tư cấp',
-  },
-  {
-    id: '7',
-    name: 'Hoàng Thị E',
-    cccd: '012345678905',
-    certificate: 'Chứng chỉ đấu thầu số 202/2024 do Bộ Kế hoạch và Đầu tư cấp',
-  },
-  {
-    id: '8',
-    name: 'Vũ Văn F',
-    cccd: '012345678906',
-    certificate: 'Chứng chỉ đấu thầu số 303/2024 do Bộ Kế hoạch và Đầu tư cấp',
   }
 ];
 
+const MOSS_GREEN = '#2D3A2D';
+const MOSS_GREEN_HOVER = '#3A4A3A';
+
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [authTimeout, setAuthTimeout] = useState(false);
-  const [dataLoading, setDataLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isSeeding, setIsSeeding] = useState(false);
+  // Local persistence keys
+  const STORAGE_KEY_PEOPLE = 'camket_people';
+  const STORAGE_KEY_FORM = 'camket_form';
 
   const [people, setPeople] = useState<Person[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -110,151 +76,37 @@ export default function App() {
   const [previewScale, setPreviewScale] = useState(0.8);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
 
-  // Auth Listener
+  // Load from localStorage on mount
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (authLoading) setAuthTimeout(true);
-    }, 10000); // 10s timeout
+    const savedPeople = localStorage.getItem(STORAGE_KEY_PEOPLE);
+    if (savedPeople) {
+      setPeople(JSON.parse(savedPeople));
+    } else {
+      setPeople(INITIAL_PEOPLE);
+    }
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
-      clearTimeout(timeout);
-      if (!currentUser) {
-        setPeople([]);
-        setSelectedIds(new Set());
-        setPackageName('');
-        setDecision('');
-        setDay('');
-        setMonth('');
-        setYear('');
-        setDataLoading(false);
-      }
-    });
-    return () => {
-      unsubscribe();
-      clearTimeout(timeout);
-    };
+    const savedForm = localStorage.getItem(STORAGE_KEY_FORM);
+    if (savedForm) {
+      const form = JSON.parse(savedForm);
+      setPackageName(form.packageName || '');
+      setDecision(form.decision || '');
+      setDay(form.day || '');
+      setMonth(form.month || '');
+      setYear(form.year || '');
+      setSelectedIds(new Set(form.selectedIds || []));
+    }
   }, []);
 
-  // Data Sync - Experts
+  // Save to localStorage on changes
   useEffect(() => {
-    if (!user) return;
+    localStorage.setItem(STORAGE_KEY_PEOPLE, JSON.stringify(people));
+  }, [people]);
 
-    const q = query(collection(db, 'experts'), where('ownerId', '==', user.uid));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const expertsData: Person[] = [];
-      snapshot.forEach((doc) => {
-        expertsData.push({ id: doc.id, ...doc.data() } as Person);
-      });
-      setPeople(expertsData);
-      setDataLoading(false);
-      setError(null);
-    }, (err) => {
-      console.error('Experts sync error:', err);
-      setError('Không thể tải danh sách chuyên gia. Vui lòng kiểm tra kết nối mạng hoặc quyền truy cập.');
-      setDataLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
-  // Data Sync - Form State
   useEffect(() => {
-    if (!user) return;
-
-    const formDocRef = doc(db, 'forms', user.uid);
-    const unsubscribe = onSnapshot(formDocRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        setPackageName(data.packageName || '');
-        setDecision(data.decision || '');
-        setDay(data.day || '');
-        setMonth(data.month || '');
-        setYear(data.year || '');
-        setSelectedIds(new Set(data.selectedExpertIds || []));
-      }
-      setError(null);
-    }, (err) => {
-      console.error('Form sync error:', err);
-      setError('Không thể tải thông tin gói thầu.');
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
-  // Debounced Form Save
-  useEffect(() => {
-    if (!user || dataLoading) return;
-
-    const timer = setTimeout(async () => {
-      try {
-        await setDoc(doc(db, 'forms', user.uid), {
-          uid: user.uid,
-          packageName,
-          decision,
-          day,
-          month,
-          year,
-          selectedExpertIds: Array.from(selectedIds),
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-      } catch (error) {
-        console.error('Error saving form state:', error);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [user, packageName, decision, day, month, year, selectedIds, dataLoading]);
-
-  const seedInitialData = async () => {
-    if (!user || isSeeding) return;
-    setIsSeeding(true);
-    try {
-      const batch = writeBatch(db);
-      INITIAL_PEOPLE.forEach(person => {
-        const docRef = doc(collection(db, 'experts'));
-        batch.set(docRef, {
-          name: person.name,
-          cccd: person.cccd,
-          certificate: person.certificate,
-          ownerId: user.uid,
-          createdAt: new Date().toISOString()
-        });
-      });
-      await batch.commit();
-      setError(null);
-    } catch (err) {
-      console.error('Error seeding data:', err);
-      setError('Không thể khởi tạo dữ liệu mẫu.');
-    } finally {
-      setIsSeeding(false);
-    }
-  };
-
-  const resetData = async () => {
-    if (!user) return;
-    if (window.confirm('Bạn có chắc chắn muốn xóa tất cả dữ liệu đã nhập và quay về mặc định?')) {
-      try {
-        const batch = writeBatch(db);
-        
-        // Delete form doc
-        batch.delete(doc(db, 'forms', user.uid));
-        
-        // Delete all experts for this user
-        const expertsQuery = query(collection(db, 'experts'), where('ownerId', '==', user.uid));
-        const expertsSnapshot = await getDocs(expertsQuery);
-        expertsSnapshot.forEach((doc) => {
-          batch.delete(doc.ref);
-        });
-
-        await batch.commit();
-        window.location.reload();
-      } catch (error) {
-        handleFirestoreError(error, OperationType.WRITE, 'resetData');
-      }
-    }
-  };
+    localStorage.setItem(STORAGE_KEY_FORM, JSON.stringify({
+      packageName, decision, day, month, year, selectedIds: Array.from(selectedIds)
+    }));
+  }, [packageName, decision, day, month, year, selectedIds]);
 
   const toggleSelectAll = () => {
     if (filteredPeople.length === 0) return;
@@ -278,28 +130,23 @@ export default function App() {
     setSelectedIds(newSet);
   };
 
-  const addPerson = async () => {
-    if (!user) return;
-    try {
-      const newExpert = {
-        name: '',
-        cccd: '',
-        certificate: '',
-        ownerId: user.uid,
-        createdAt: new Date().toISOString()
-      };
-      await addDoc(collection(db, 'experts'), newExpert);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'experts');
-    }
+  const addPerson = () => {
+    const newPerson: Person = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: '',
+      cccd: '',
+      certificate: ''
+    };
+    setPeople([...people, newPerson]);
+    setEditingPerson(newPerson);
   };
 
-  const removePerson = async (id: string) => {
-    if (!user) return;
-    try {
-      await deleteDoc(doc(db, 'experts', id));
-    } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `experts/${id}`);
+  const removePerson = (id: string) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa chuyên gia này?')) {
+      setPeople(people.filter(p => p.id !== id));
+      const newSelected = new Set(selectedIds);
+      newSelected.delete(id);
+      setSelectedIds(newSelected);
     }
   };
 
@@ -307,19 +154,45 @@ export default function App() {
     setEditingPerson({ ...person });
   };
 
-  const saveEditedPerson = async () => {
-    if (editingPerson && user) {
-      try {
-        const { id, ...data } = editingPerson;
-        await updateDoc(doc(db, 'experts', id), {
-          ...data,
-          updatedAt: new Date().toISOString()
-        });
-        setEditingPerson(null);
-      } catch (error) {
-        handleFirestoreError(error, OperationType.UPDATE, `experts/${editingPerson.id}`);
-      }
+  const saveEditedPerson = () => {
+    if (editingPerson) {
+      setPeople(people.map(p => p.id === editingPerson.id ? editingPerson : p));
+      setEditingPerson(null);
     }
+  };
+
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.json_to_sheet([
+      { 'Họ và tên': 'Nguyễn Văn A', 'Số CCCD': '012345678901', 'Chứng chỉ nghiệp vụ': 'Chứng chỉ số 123...' }
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Danh sách chuyên gia");
+    XLSX.writeFile(wb, "Bieu_mau_nhap_lieu_chuyen_gia.xlsx");
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const bstr = evt.target?.result;
+      const wb = XLSX.read(bstr, { type: 'binary' });
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      const data = XLSX.utils.sheet_to_json(ws);
+      
+      const newPeople = data.map((row: any) => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name: row['Họ và tên'] || row['Name'] || '',
+        cccd: row['Số CCCD'] || row['ID'] || '',
+        certificate: row['Chứng chỉ nghiệp vụ'] || row['Certificate'] || ''
+      })).filter(p => p.name || p.cccd);
+
+      setPeople(prev => [...prev, ...newPeople]);
+      alert(`Đã nhập thành công ${newPeople.length} chuyên gia.`);
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = ''; // Reset input
   };
 
   const handleExportWord = async () => {
@@ -328,10 +201,8 @@ export default function App() {
         alert('Vui lòng chọn ít nhất một nhân sự để xuất file.');
         return;
       }
-      console.log('Bắt đầu xuất Word cho', selectedPeople.length, 'người');
       setIsExportingWord(true);
       await exportToWord(selectedPeople, packageName, decision, day, month, year);
-      console.log('Xuất Word thành công');
     } catch (error) {
       console.error('Lỗi xuất Word:', error);
       alert('Có lỗi xảy ra khi xuất Word: ' + (error instanceof Error ? error.message : String(error)));
@@ -339,103 +210,22 @@ export default function App() {
       setIsExportingWord(false);
     }
   };
+
   const filteredPeople = people.filter(p => 
-    selectedFilterNames.length === 0 || selectedFilterNames.includes(p.name)
+    (selectedFilterNames.length === 0 || selectedFilterNames.includes(p.name)) &&
+    (p.name.toLowerCase().includes(filterSearchTerm.toLowerCase()) || p.cccd.includes(filterSearchTerm))
   );
 
   const selectedPeople = filteredPeople.filter(p => selectedIds.has(p.id));
-  const previewPerson = selectedPeople.length > 0 ? selectedPeople[0] : people[0];
-
-  if (authLoading) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-zinc-50">
-        <div className="flex flex-col items-center gap-6 max-w-xs text-center">
-          <div className="w-12 h-12 border-4 border-[#0284c7] border-t-transparent rounded-full animate-spin"></div>
-          <div className="space-y-2">
-            <p className="text-zinc-700 font-bold">Đang tải hệ thống...</p>
-            {authTimeout && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <p className="text-xs text-zinc-600">Quá trình tải đang mất nhiều thời gian hơn dự kiến. Vui lòng thử tải lại trang.</p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.location.reload()}
-                  className="h-12 rounded-2xl border-zinc-200 text-zinc-600 font-bold px-6"
-                >
-                  Tải lại trang
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-zinc-50 p-6">
-        <Card className="w-full max-w-md rounded-[2.5rem] shadow-2xl border-zinc-100 overflow-hidden">
-          <div className="p-12 flex flex-col items-center text-center gap-6">
-            <div className="p-6 bg-red-100 rounded-3xl">
-              <X className="w-12 h-12 text-red-600" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold text-zinc-900">Đã xảy ra lỗi</h1>
-              <p className="text-zinc-700">{error}</p>
-            </div>
-            <Button 
-              onClick={() => window.location.reload()}
-              className="w-full h-14 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-2xl font-bold"
-            >
-              Thử lại
-            </Button>
-            <Button 
-              variant="ghost"
-              onClick={logout}
-              className="w-full h-14 text-zinc-600 hover:text-zinc-800 font-bold"
-            >
-              Đăng xuất
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-zinc-50 p-6">
-        <Card className="w-full max-w-md rounded-[2.5rem] shadow-2xl border-zinc-100 overflow-hidden">
-          <div className="p-12 flex flex-col items-center text-center gap-8">
-            <div className="p-6 bg-[#0284c7] rounded-3xl shadow-2xl shadow-[#0284c7]/30">
-              <FileText className="w-12 h-12 text-white" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Tạo Bản Cam Kết</h1>
-              <p className="text-zinc-700">Vui lòng đăng nhập để lưu trữ dữ liệu vĩnh viễn và truy cập từ mọi thiết bị.</p>
-            </div>
-            <Button 
-              onClick={loginWithGoogle}
-              className="w-full h-16 bg-white hover:bg-zinc-50 text-zinc-900 border-2 border-zinc-100 rounded-2xl font-bold text-lg flex items-center justify-center gap-4 shadow-sm transition-all active:scale-[0.98]"
-            >
-              <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="Google" />
-              Đăng nhập với Google
-            </Button>
-            <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold">An toàn • Bảo mật • Vĩnh viễn</p>
-          </div>
-        </Card>
-      </div>
-    );
-  }
 
   return (
-    <div className="flex h-screen bg-zinc-100 overflow-hidden font-sans selection:bg-[#0284c7]/20 selection:text-[#0369a1] text-zinc-900">
-      {/* Sidebar / Controls - Hidden when printing */}
+    <div className="flex h-screen bg-zinc-100 overflow-hidden font-sans selection:bg-[#2D3A2D]/10 selection:text-zinc-900 text-zinc-900">
+      {/* Sidebar / Controls */}
       <div className="w-[420px] flex flex-col border-r border-zinc-200 bg-white print:hidden shadow-sm z-10">
         <div className="p-6 bg-white border-b border-zinc-100 shrink-0 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-3 text-zinc-900">
-              <div className="p-2 bg-[#0284c7] rounded-xl shadow-lg shadow-[#0284c7]/20">
+              <div className="p-2 bg-[#2D3A2D] rounded-xl shadow-lg shadow-[#2D3A2D]/20">
                 <FileText className="w-6 h-6 text-white" />
               </div>
               Tạo Bản Cam Kết
@@ -447,19 +237,20 @@ export default function App() {
               variant="ghost" 
               size="icon" 
               className="h-10 w-10 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 rounded-xl transition-all"
-              onClick={resetData}
-              title="Xóa dữ liệu và đặt lại"
+              onClick={() => {
+                if(window.confirm('Xóa toàn bộ dữ liệu hiện tại?')) {
+                  setPeople(INITIAL_PEOPLE);
+                  setPackageName('');
+                  setDecision('');
+                  setDay('');
+                  setMonth('');
+                  setYear('');
+                  setSelectedIds(new Set());
+                }
+              }}
+              title="Đặt lại dữ liệu"
             >
-              <Plus className="w-5 h-5 rotate-45" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-10 w-10 text-zinc-400 hover:text-[#f43f5e] hover:bg-[#f43f5e]/10 rounded-xl transition-all"
-              onClick={logout}
-              title="Đăng xuất"
-            >
-              <LogOut className="w-5 h-5" />
+              <X className="w-5 h-5" />
             </Button>
           </div>
         </div>
@@ -481,7 +272,7 @@ export default function App() {
                     placeholder="Nhập tên gói thầu..." 
                     value={packageName} 
                     onChange={e => setPackageName(e.target.value)} 
-                    className="h-12 rounded-xl border-zinc-200 bg-zinc-50/50 focus:bg-white focus:border-[#0284c7] focus:ring-4 focus:ring-[#0284c7]/10 shadow-none transition-all text-sm font-medium text-zinc-900 placeholder:text-zinc-400 px-4"
+                    className="h-12 rounded-xl border-zinc-200 bg-zinc-50/50 focus:bg-white focus:border-[#2D3A2D] focus:ring-4 focus:ring-[#2D3A2D]/10 shadow-none transition-all text-sm font-medium text-zinc-900 placeholder:text-zinc-400 px-4"
                   />
                 </div>
                 <div className="space-y-2">
@@ -491,177 +282,140 @@ export default function App() {
                     placeholder="Nhập số quyết định..." 
                     value={decision} 
                     onChange={e => setDecision(e.target.value)} 
-                    className="h-12 rounded-xl border-zinc-200 bg-zinc-50/50 focus:bg-white focus:border-[#0284c7] focus:ring-4 focus:ring-[#0284c7]/10 shadow-none transition-all text-sm font-medium text-zinc-900 placeholder:text-zinc-400 px-4"
+                    className="h-12 rounded-xl border-zinc-200 bg-zinc-50/50 focus:bg-white focus:border-[#2D3A2D] focus:ring-4 focus:ring-[#2D3A2D]/10 shadow-none transition-all text-sm font-medium text-zinc-900 placeholder:text-zinc-400 px-4"
                   />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Section 2: Kho dữ liệu chuyên gia */}
+            {/* Section 2: Tổ chuyên gia */}
             <Card className="border-zinc-200 shadow-sm rounded-2xl overflow-hidden bg-white shrink-0">
               <CardHeader className="py-3 px-5 bg-yellow-400 border-b border-yellow-500 flex flex-row items-center justify-between shrink-0">
                 <CardTitle className="text-sm font-bold text-zinc-900 flex items-center gap-2 uppercase tracking-wider">
                   2. Tổ chuyên gia ({people.length})
                 </CardTitle>
-                <Button variant="secondary" size="sm" onClick={addPerson} className="h-8 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white transition-all font-bold px-3 text-xs uppercase tracking-wider">
-                  <Plus className="w-3 h-3 mr-1" /> Thêm mới
-                </Button>
-              </CardHeader>
-              <div className="p-4 border-b border-zinc-100 bg-zinc-50/50">
-                <DropdownMenu open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                  <DropdownMenuTrigger
-                    render={
-                      <Button variant="outline" className="w-full h-10 justify-between rounded-xl border-zinc-200 bg-white text-xs hover:bg-zinc-50 focus:bg-white focus:border-[#0284c7] shadow-none font-bold text-zinc-700 transition-all px-4" />
-                    }
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <Filter className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                      <span className="truncate">
-                        {selectedFilterNames.length === 0 
-                          ? "Lọc nhân sự..." 
-                          : `Đã chọn ${selectedFilterNames.length} người`}
-                      </span>
-                    </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-zinc-400 opacity-50 shrink-0" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-[320px] rounded-2xl shadow-2xl border-zinc-100 p-0 bg-white" align="start">
-                    <div className="p-3 border-b border-zinc-50 sticky top-0 bg-white z-10">
-                      <div className="relative flex items-center gap-2">
-                        <div className="relative flex-1">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
-                          <Input 
-                            placeholder="Tìm tên nhân sự..." 
-                            value={filterSearchTerm}
-                            onChange={(e) => setFilterSearchTerm(e.target.value)}
-                            className="h-10 pl-9 pr-9 text-sm rounded-xl border-zinc-100 bg-zinc-50 focus-visible:ring-[#0284c7]/20 text-zinc-900 font-medium"
-                            onKeyDown={(e) => e.stopPropagation()}
-                          />
-                          {filterSearchTerm && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 hover:bg-transparent text-zinc-400 hover:text-zinc-600"
-                              onClick={() => setFilterSearchTerm('')}
-                            >
-                              <Plus className="w-4 h-4 rotate-45" />
-                            </Button>
-                          )}
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-10 w-10 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 rounded-xl shrink-0"
-                          onClick={() => setIsFilterOpen(false)}
-                        >
-                          <X className="w-5 h-5" />
-                        </Button>
+                <Dialog>
+                  <DialogTrigger render={<Button variant="secondary" size="sm" onClick={addPerson} className="h-8 rounded-lg bg-[#2D3A2D] hover:bg-[#3A4A3A] text-white transition-all font-bold px-3 text-xs uppercase tracking-wider" />}>
+                    <Plus className="w-3 h-3 mr-1" /> Thêm mới
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[550px] rounded-[2rem] bg-white border-zinc-100 shadow-2xl p-8 text-zinc-900">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-bold text-zinc-900 tracking-tight">Thêm/Sửa chuyên gia</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-6 py-6">
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-name" className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Họ và tên</Label>
+                        <Input 
+                          id="edit-name" 
+                          value={editingPerson?.name || ''} 
+                          onChange={e => setEditingPerson(prev => prev ? {...prev, name: e.target.value} : null)}
+                          className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-900 font-bold text-base px-5 focus:bg-white focus:ring-4 focus:ring-[#2D3A2D]/10 transition-all"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-cccd" className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Số CCCD</Label>
+                        <Input 
+                          id="edit-cccd" 
+                          value={editingPerson?.cccd || ''} 
+                          onChange={e => setEditingPerson(prev => prev ? {...prev, cccd: e.target.value} : null)}
+                          className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-900 font-bold text-base px-5 focus:bg-white focus:ring-4 focus:ring-[#2D3A2D]/10 transition-all"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-cert" className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Chứng chỉ nghiệp vụ</Label>
+                        <textarea 
+                          id="edit-cert" 
+                          value={editingPerson?.certificate || ''} 
+                          onChange={e => setEditingPerson(prev => prev ? {...prev, certificate: e.target.value} : null)}
+                          className="w-full min-h-[120px] rounded-xl border border-zinc-100 bg-zinc-50 p-5 text-base text-zinc-900 font-bold focus:bg-white focus:ring-4 focus:ring-[#2D3A2D]/10 outline-none transition-all resize-none"
+                        />
                       </div>
                     </div>
-                    <div className="max-h-[320px] overflow-y-auto custom-scrollbar p-2">
-                      {Array.from(new Set(people.map(p => p.name).filter(Boolean)))
-                        .filter((name: string) => name.toLowerCase().includes(filterSearchTerm.toLowerCase()))
-                        .map((name: string) => (
-                          <DropdownMenuCheckboxItem
-                            key={name}
-                            checked={selectedFilterNames.includes(name)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedFilterNames([...selectedFilterNames, name]);
-                              } else {
-                                setSelectedFilterNames(selectedFilterNames.filter(n => n !== name));
-                              }
-                            }}
-                            onSelect={(e) => e.preventDefault()}
-                            className="py-2.5 px-4 text-sm font-medium rounded-xl focus:bg-[#0284c7]/10 focus:text-[#0284c7] text-zinc-700"
-                          >
-                            {name}
-                          </DropdownMenuCheckboxItem>
-                        ))}
-                      {people.filter(p => p.name && p.name.toLowerCase().includes(filterSearchTerm.toLowerCase())).length === 0 && (
-                        <div className="p-6 text-xs text-zinc-400 text-center italic font-medium">Không tìm thấy kết quả</div>
-                      )}
-                    </div>
-                    <div className="p-2 border-t border-zinc-50 bg-zinc-50/30">
-                      <Button 
-                        variant="ghost" 
-                        className="w-full h-10 text-xs text-zinc-400 hover:text-[#0284c7] hover:bg-[#0284c7]/5 font-bold justify-center rounded-xl transition-all uppercase tracking-wider"
-                        onClick={() => setIsFilterOpen(false)}
-                      >
-                        <X className="w-3 h-3 mr-2" /> Đóng bộ lọc
-                      </Button>
-                    </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    <DialogFooter>
+                      <DialogClose render={<Button onClick={saveEditedPerson} className="h-12 w-full bg-[#2D3A2D] hover:bg-[#3A4A3A] rounded-xl font-bold text-white text-base shadow-lg transition-all active:scale-[0.98]" />}>
+                        Lưu thay đổi
+                      </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </CardHeader>
+              
+              <div className="p-4 border-b border-zinc-100 bg-zinc-50/50 flex flex-col gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400" />
+                  <Input 
+                    placeholder="Lọc nhân sự..." 
+                    value={filterSearchTerm}
+                    onChange={(e) => setFilterSearchTerm(e.target.value)}
+                    className="h-10 pl-9 pr-4 text-xs rounded-xl border-zinc-200 bg-white focus:bg-white focus:border-zinc-900 shadow-none font-medium text-zinc-700 transition-all"
+                  />
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button variant="secondary" size="sm" onClick={downloadTemplate} className="flex-1 h-9 rounded-xl bg-[#2D3A2D] hover:bg-[#3A4A3A] text-white text-[10px] font-bold uppercase tracking-wider transition-all">
+                    <Download className="w-3 h-3 mr-1.5" /> Tải biểu mẫu
+                  </Button>
+                  <div className="flex-1 relative">
+                    <Button variant="secondary" size="sm" className="w-full h-9 rounded-xl bg-[#2D3A2D] hover:bg-[#3A4A3A] text-white text-[10px] font-bold uppercase tracking-wider transition-all">
+                      <Upload className="w-3 h-3 mr-1.5" /> Nhập Excel
+                    </Button>
+                    <input 
+                      type="file" 
+                      accept=".xlsx, .xls" 
+                      onChange={handleFileUpload} 
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                  </div>
+                </div>
               </div>
+
               <div className="p-0">
                 <Table className="border-collapse">
                   <TableHeader className="bg-zinc-50/50 border-b border-zinc-100 sticky top-0 z-20 backdrop-blur-sm">
                     <TableRow className="hover:bg-transparent border-zinc-100">
                       <TableHead className="w-[44px] text-center px-1 py-2">
                         <Checkbox 
-                           checked={selectedIds.size === people.length && people.length > 0}
+                           checked={filteredPeople.length > 0 && filteredPeople.every(p => selectedIds.has(p.id))}
                            onCheckedChange={toggleSelectAll}
-                           className="w-4 h-4 border-zinc-300 data-[state=checked]:bg-[#0284c7] data-[state=checked]:border-[#0284c7] rounded-md"
+                           className="w-4 h-4 border-zinc-300 data-[state=checked]:bg-[#2D3A2D] data-[state=checked]:border-[#2D3A2D] rounded-md"
                         />
                       </TableHead>
-                      <TableHead className="font-bold text-zinc-700 text-xs py-2 uppercase tracking-wider">Họ tên & CCCD</TableHead>
-                      <TableHead className="w-[80px] text-center font-bold text-zinc-700 text-xs py-2 uppercase tracking-wider">Thao tác</TableHead>
+                      <TableHead className="font-bold text-zinc-700 text-[11px] py-2 uppercase tracking-wider">Tổ chuyên gia</TableHead>
+                      <TableHead className="w-[80px] text-center font-bold text-zinc-700 text-[11px] py-2 uppercase tracking-wider">Thao tác</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {dataLoading && (
+                    {filteredPeople.length === 0 && (
                       <TableRow className="border-zinc-100">
                         <TableCell colSpan={3} className="p-8 text-center">
-                          <div className="flex flex-col items-center gap-3">
-                            <div className="w-6 h-6 border-2 border-[#0284c7] border-t-transparent rounded-full animate-spin"></div>
-                            <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Đang tải...</p>
-                          </div>
+                          <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider italic">Không tìm thấy kết quả</p>
                         </TableCell>
                       </TableRow>
                     )}
-                    {!dataLoading && people.length === 0 && (
-                      <TableRow className="border-zinc-100">
-                        <TableCell colSpan={3} className="p-8 text-center">
-                          <div className="flex flex-col items-center gap-3">
-                            <div className="p-3 bg-zinc-50 rounded-xl">
-                              <Search className="w-6 h-6 text-zinc-300" />
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-xs text-zinc-700 font-bold">Danh sách trống</p>
-                              <p className="text-xs text-zinc-400">Vui lòng thêm chuyên gia</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    {!dataLoading && filteredPeople.map((p, index) => (
-                      <TableRow key={p.id} className={`group border-b border-zinc-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-zinc-50/30'} hover:bg-[#0284c7]/5`}>
+                    {filteredPeople.map((p, index) => (
+                      <TableRow key={p.id} className={`group border-b border-zinc-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-zinc-50/30'} hover:bg-[#2D3A2D]/5`}>
                         <TableCell className="text-center px-1 py-3">
                           <Checkbox 
                             checked={selectedIds.has(p.id)}
                             onCheckedChange={() => toggleSelect(p.id)}
-                            className="w-4 h-4 border-zinc-300 data-[state=checked]:bg-[#0284c7] data-[state=checked]:border-[#0284c7] rounded-md"
+                            className="w-4 h-4 border-zinc-300 data-[state=checked]:bg-[#2D3A2D] data-[state=checked]:border-[#2D3A2D] rounded-md"
                           />
                         </TableCell>
                         <TableCell className="py-3 pr-2">
                           <div className="flex flex-col">
                             <span className="text-sm font-bold text-zinc-900 truncate max-w-[180px]">{p.name || 'Chưa nhập tên'}</span>
-                            <span className="text-xs font-medium text-zinc-600 font-mono tracking-wider">{p.cccd || 'Số CCCD...'}</span>
+                            <span className="text-[11px] font-medium text-zinc-500 font-mono tracking-wider">{p.cccd || 'Số CCCD...'}</span>
                           </div>
                         </TableCell>
                         <TableCell className="py-2 text-center">
                           <div className="flex items-center justify-center gap-1">
                             <Dialog>
-                              <DialogTrigger
-                                render={
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 text-zinc-400 hover:text-[#0284c7] hover:bg-[#0284c7]/10 rounded-lg"
-                                    onClick={() => handleEditPerson(p)}
-                                  />
-                                }
-                              >
+                              <DialogTrigger render={<Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg"
+                                onClick={() => handleEditPerson(p)}
+                              />}>
                                 <Edit className="w-4 h-4" />
                               </DialogTrigger>
                               <DialogContent className="sm:max-w-[550px] rounded-[2rem] bg-white border-zinc-100 shadow-2xl p-8 text-zinc-900">
@@ -675,7 +429,7 @@ export default function App() {
                                       id="edit-name" 
                                       value={editingPerson?.name || ''} 
                                       onChange={e => setEditingPerson(prev => prev ? {...prev, name: e.target.value} : null)}
-                                      className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-900 font-bold text-base px-5 focus:bg-white focus:ring-4 focus:ring-[#0284c7]/10 transition-all"
+                                      className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-900 font-bold text-base px-5 focus:bg-white focus:ring-4 focus:ring-zinc-900/10 transition-all"
                                     />
                                   </div>
                                   <div className="grid gap-2">
@@ -684,7 +438,7 @@ export default function App() {
                                       id="edit-cccd" 
                                       value={editingPerson?.cccd || ''} 
                                       onChange={e => setEditingPerson(prev => prev ? {...prev, cccd: e.target.value} : null)}
-                                      className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-900 font-bold text-base px-5 focus:bg-white focus:ring-4 focus:ring-[#0284c7]/10 transition-all"
+                                      className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-900 font-bold text-base px-5 focus:bg-white focus:ring-4 focus:ring-zinc-900/10 transition-all"
                                     />
                                   </div>
                                   <div className="grid gap-2">
@@ -693,13 +447,13 @@ export default function App() {
                                       id="edit-cert" 
                                       value={editingPerson?.certificate || ''} 
                                       onChange={e => setEditingPerson(prev => prev ? {...prev, certificate: e.target.value} : null)}
-                                      className="w-full min-h-[120px] rounded-xl border border-zinc-100 bg-zinc-50 p-5 text-base text-zinc-900 font-bold focus:bg-white focus:ring-4 focus:ring-[#0284c7]/10 outline-none transition-all resize-none"
+                                      className="w-full min-h-[120px] rounded-xl border border-zinc-100 bg-zinc-50 p-5 text-base text-zinc-900 font-bold focus:bg-white focus:ring-4 focus:ring-zinc-900/10 outline-none transition-all resize-none"
                                     />
                                   </div>
                                 </div>
                                 <DialogFooter>
-                                  <DialogClose asChild>
-                                    <Button onClick={saveEditedPerson} className="h-12 w-full bg-[#0284c7] hover:bg-[#0369a1] rounded-xl font-bold text-white text-base shadow-lg shadow-[#0284c7]/20 transition-all active:scale-[0.98]">Lưu thay đổi</Button>
+                                  <DialogClose render={<Button onClick={saveEditedPerson} className="h-12 w-full bg-[#2D3A2D] hover:bg-[#3A4A3A] rounded-xl font-bold text-white text-base shadow-lg transition-all active:scale-[0.98]" />}>
+                                    Lưu thay đổi
                                   </DialogClose>
                                 </DialogFooter>
                               </DialogContent>
@@ -707,7 +461,7 @@ export default function App() {
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-8 w-8 text-zinc-400 hover:text-[#f43f5e] hover:bg-[#f43f5e]/10 rounded-lg"
+                              className="h-8 w-8 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
                               onClick={() => removePerson(p.id)}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -729,9 +483,9 @@ export default function App() {
                 </Label>
               </div>
               <div className="p-5 flex gap-3">
-                <Input id="day" value={day} onChange={e => setDay(e.target.value)} placeholder="Ngày" maxLength={2} className="h-12 rounded-xl text-center font-bold text-zinc-900 bg-zinc-50/50 border-zinc-100 text-sm placeholder:text-zinc-400 focus:bg-white transition-all" />
-                <Input id="month" value={month} onChange={e => setMonth(e.target.value)} placeholder="Tháng" maxLength={2} className="h-12 rounded-xl text-center font-bold text-zinc-900 bg-zinc-50/50 border-zinc-100 text-sm placeholder:text-zinc-400 focus:bg-white transition-all" />
-                <Input id="year" value={year} onChange={e => setYear(e.target.value)} placeholder="Năm" maxLength={4} className="h-12 rounded-xl text-center font-bold text-zinc-900 bg-zinc-50/50 border-zinc-100 text-sm placeholder:text-zinc-400 focus:bg-white transition-all" />
+                <Input id="day" value={day} onChange={e => setDay(e.target.value)} placeholder="Ngày" maxLength={2} className="h-10 rounded-xl text-center font-bold text-zinc-900 bg-zinc-50/50 border-zinc-100 text-xs placeholder:text-zinc-400 focus:bg-white transition-all" />
+                <Input id="month" value={month} onChange={e => setMonth(e.target.value)} placeholder="Tháng" maxLength={2} className="h-10 rounded-xl text-center font-bold text-zinc-900 bg-zinc-50/50 border-zinc-100 text-xs placeholder:text-zinc-400 focus:bg-white transition-all" />
+                <Input id="year" value={year} onChange={e => setYear(e.target.value)} placeholder="Năm" maxLength={4} className="h-10 rounded-xl text-center font-bold text-zinc-900 bg-zinc-50/50 border-zinc-100 text-xs placeholder:text-zinc-400 focus:bg-white transition-all" />
               </div>
             </div>
           </div>
@@ -739,7 +493,7 @@ export default function App() {
 
         <div className="p-6 border-t border-zinc-100 bg-white flex flex-col gap-4 shrink-0">
           <Button 
-            className="w-full h-14 text-base font-bold bg-[#0284c7] hover:bg-[#0369a1] text-white shadow-lg shadow-[#0284c7]/20 rounded-2xl transition-all disabled:opacity-50 active:scale-[0.98]" 
+            className="w-full h-14 text-base font-bold bg-[#2D3A2D] hover:bg-[#3A4A3A] text-white shadow-lg shadow-[#2D3A2D]/20 rounded-2xl transition-all disabled:opacity-50 active:scale-[0.98]" 
             onClick={handleExportWord}
             disabled={selectedPeople.length === 0 || isExportingWord}
           >
@@ -749,9 +503,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Preview Area - Visible on screen */}
+      {/* Preview Area */}
       <div className="flex-1 overflow-hidden flex flex-col bg-zinc-50 relative">
-        {/* Preview Toolbar */}
         <div className="h-14 bg-white border-b border-zinc-100 flex items-center justify-between px-8 shrink-0 z-20 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-md shadow-green-500/30"></div>
@@ -783,7 +536,7 @@ export default function App() {
                   minHeight: '297mm', 
                   padding: '20mm 20mm 20mm 30mm',
                   transform: `scale(${previewScale})`,
-                  marginBottom: `${(297 * previewScale) - 297}mm` // Adjust margin to compensate for scale
+                  marginBottom: `${(297 * previewScale) - 297}mm`
                 }}
               >
                 <div className="absolute top-6 right-6 bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded font-bold uppercase tracking-widest border border-slate-200">
