@@ -52,8 +52,8 @@ const INITIAL_PEOPLE: Person[] = [
   }
 ];
 
-const MOSS_GREEN = '#2D3A2D';
-const MOSS_GREEN_HOVER = '#3A4A3A';
+const DEEP_BLACK = '#000000';
+const DEEP_BLACK_HOVER = '#1A1A1A';
 
 export default function App() {
   // Local persistence keys
@@ -142,12 +142,10 @@ export default function App() {
   };
 
   const removePerson = (id: string) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa chuyên gia này?')) {
-      setPeople(people.filter(p => p.id !== id));
-      const newSelected = new Set(selectedIds);
-      newSelected.delete(id);
-      setSelectedIds(newSelected);
-    }
+    setPeople(people.filter(p => p.id !== id));
+    const newSelected = new Set(selectedIds);
+    newSelected.delete(id);
+    setSelectedIds(newSelected);
   };
 
   const handleEditPerson = (person: Person) => {
@@ -188,7 +186,8 @@ export default function App() {
         certificate: row['Chứng chỉ nghiệp vụ'] || row['Certificate'] || ''
       })).filter(p => p.name || p.cccd);
 
-      setPeople(prev => [...prev, ...newPeople]);
+      setPeople(newPeople);
+      setSelectedIds(new Set());
       alert(`Đã nhập thành công ${newPeople.length} chuyên gia.`);
     };
     reader.readAsBinaryString(file);
@@ -219,120 +218,101 @@ export default function App() {
   const selectedPeople = filteredPeople.filter(p => selectedIds.has(p.id));
 
   return (
-    <div className="flex h-screen bg-zinc-100 overflow-hidden font-sans selection:bg-[#2D3A2D]/10 selection:text-zinc-900 text-zinc-900">
+    <div className="flex h-screen bg-zinc-100 overflow-hidden font-sans selection:bg-[#000000]/10 selection:text-zinc-900 text-zinc-900">
       {/* Sidebar / Controls */}
       <div className="w-[420px] flex flex-col border-r border-zinc-200 bg-white print:hidden shadow-sm z-10">
         <div className="p-6 bg-white border-b border-zinc-100 shrink-0 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-3 text-zinc-900">
-              <div className="p-2 bg-[#2D3A2D] rounded-xl shadow-lg shadow-[#2D3A2D]/20">
+              <div className="p-2 bg-[#166534] rounded-xl shadow-lg shadow-[#166534]/20">
                 <FileText className="w-6 h-6 text-white" />
               </div>
               Tạo Bản Cam Kết
             </h1>
-            <p className="text-xs text-zinc-500 mt-2 font-medium italic">Hệ thống quản lý bản cam kết chuyên gia</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-10 w-10 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 rounded-xl transition-all"
-              onClick={() => {
-                if(window.confirm('Xóa toàn bộ dữ liệu hiện tại?')) {
-                  setPeople(INITIAL_PEOPLE);
-                  setPackageName('');
-                  setDecision('');
-                  setDay('');
-                  setMonth('');
-                  setYear('');
-                  setSelectedIds(new Set());
-                }
-              }}
-              title="Đặt lại dữ liệu"
-            >
-              <X className="w-5 h-5" />
-            </Button>
+            <p className="text-xs text-zinc-500 mt-2 font-medium italic">Hệ thống tạo nhanh Cam kết Tổ chuyên gia</p>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="p-4 flex flex-col gap-4">
             {/* Section 1: Thông tin gói thầu */}
-            <Card className="border-zinc-200 shadow-sm rounded-2xl overflow-hidden bg-white shrink-0">
+            <Card className="border-2 border-yellow-400/50 shadow-md rounded-2xl overflow-hidden bg-white shrink-0 transition-all hover:shadow-2xl hover:scale-[1.01] hover:border-yellow-400">
               <CardHeader className="py-3 px-5 bg-yellow-400 border-b border-yellow-500">
                 <CardTitle className="text-sm font-bold text-zinc-900 flex items-center gap-2 uppercase tracking-wider">
-                  1. Thông tin gói thầu
+                  <div className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center text-[10px]">1</div>
+                  Thông tin gói thầu
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 p-5">
+              <CardContent className="space-y-4 p-5 bg-zinc-50/30">
                 <div className="space-y-2">
-                  <Label htmlFor="packageName" className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tên gói thầu (3)</Label>
+                  <Label htmlFor="packageName" className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Tên gói thầu</Label>
                   <Input 
                     id="packageName" 
                     placeholder="Nhập tên gói thầu..." 
                     value={packageName} 
                     onChange={e => setPackageName(e.target.value)} 
-                    className="h-12 rounded-xl border-zinc-200 bg-zinc-50/50 focus:bg-white focus:border-[#2D3A2D] focus:ring-4 focus:ring-[#2D3A2D]/10 shadow-none transition-all text-sm font-medium text-zinc-900 placeholder:text-zinc-400 px-4"
+                    className="h-12 rounded-xl border-zinc-200 bg-white focus:border-[#000000] focus:ring-4 focus:ring-[#000000]/10 shadow-none transition-all text-sm font-medium text-zinc-900 placeholder:text-zinc-400 px-4"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="decision" className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Quyết định thành lập (4)</Label>
+                  <Label htmlFor="decision" className="text-xs font-bold text-zinc-700 uppercase tracking-wider">Quyết định thành lập</Label>
                   <Input 
                     id="decision" 
                     placeholder="Nhập số quyết định..." 
                     value={decision} 
                     onChange={e => setDecision(e.target.value)} 
-                    className="h-12 rounded-xl border-zinc-200 bg-zinc-50/50 focus:bg-white focus:border-[#2D3A2D] focus:ring-4 focus:ring-[#2D3A2D]/10 shadow-none transition-all text-sm font-medium text-zinc-900 placeholder:text-zinc-400 px-4"
+                    className="h-12 rounded-xl border-zinc-200 bg-white focus:border-[#000000] focus:ring-4 focus:ring-[#000000]/10 shadow-none transition-all text-sm font-medium text-zinc-900 placeholder:text-zinc-400 px-4"
                   />
                 </div>
               </CardContent>
             </Card>
 
             {/* Section 2: Tổ chuyên gia */}
-            <Card className="border-zinc-200 shadow-sm rounded-2xl overflow-hidden bg-white shrink-0">
+            <Card className="border-2 border-yellow-400/50 shadow-md rounded-2xl overflow-hidden bg-white shrink-0 transition-all hover:shadow-2xl hover:scale-[1.01] hover:border-yellow-400">
               <CardHeader className="py-3 px-5 bg-yellow-400 border-b border-yellow-500 flex flex-row items-center justify-between shrink-0">
                 <CardTitle className="text-sm font-bold text-zinc-900 flex items-center gap-2 uppercase tracking-wider">
-                  2. Tổ chuyên gia ({people.length})
+                  <div className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center text-[10px]">2</div>
+                  Tổ chuyên gia
                 </CardTitle>
                 <Dialog>
-                  <DialogTrigger render={<Button variant="secondary" size="sm" onClick={addPerson} className="h-8 rounded-lg bg-[#2D3A2D] hover:bg-[#3A4A3A] text-white transition-all font-bold px-3 text-xs uppercase tracking-wider" />}>
+                  <DialogTrigger render={<Button variant="secondary" size="sm" onClick={addPerson} className="h-8 rounded-lg bg-[#000000] hover:bg-[#1A1A1A] text-white transition-all font-bold px-3 text-xs uppercase tracking-wider" />}>
                     <Plus className="w-3 h-3 mr-1" /> Thêm mới
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[550px] rounded-[2rem] bg-white border-zinc-100 shadow-2xl p-8 text-zinc-900">
+                  <DialogContent className="sm:max-w-[550px] rounded-[2rem] bg-white border-zinc-100 shadow-2xl p-8 text-zinc-700">
                     <DialogHeader>
-                      <DialogTitle className="text-xl font-bold text-zinc-900 tracking-tight">Thêm/Sửa chuyên gia</DialogTitle>
+                      <DialogTitle className="text-xl font-bold text-zinc-700 tracking-tight">Thêm/Sửa chuyên gia</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-6 py-6">
                       <div className="grid gap-2">
-                        <Label htmlFor="edit-name" className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Họ và tên</Label>
+                        <Label htmlFor="edit-name" className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Họ và tên</Label>
                         <Input 
                           id="edit-name" 
                           value={editingPerson?.name || ''} 
                           onChange={e => setEditingPerson(prev => prev ? {...prev, name: e.target.value} : null)}
-                          className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-900 font-bold text-base px-5 focus:bg-white focus:ring-4 focus:ring-[#2D3A2D]/10 transition-all"
+                          className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-600 font-medium text-base px-5 focus:bg-white focus:ring-4 focus:ring-[#166534]/10 transition-all"
                         />
                       </div>
                       <div className="grid gap-2">
-                        <Label htmlFor="edit-cccd" className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Số CCCD</Label>
+                        <Label htmlFor="edit-cccd" className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Số CCCD</Label>
                         <Input 
                           id="edit-cccd" 
                           value={editingPerson?.cccd || ''} 
                           onChange={e => setEditingPerson(prev => prev ? {...prev, cccd: e.target.value} : null)}
-                          className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-900 font-bold text-base px-5 focus:bg-white focus:ring-4 focus:ring-[#2D3A2D]/10 transition-all"
+                          className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-600 font-medium text-base px-5 focus:bg-white focus:ring-4 focus:ring-[#166534]/10 transition-all"
                         />
                       </div>
                       <div className="grid gap-2">
-                        <Label htmlFor="edit-cert" className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Chứng chỉ nghiệp vụ</Label>
+                        <Label htmlFor="edit-cert" className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Chứng chỉ nghiệp vụ</Label>
                         <textarea 
                           id="edit-cert" 
                           value={editingPerson?.certificate || ''} 
                           onChange={e => setEditingPerson(prev => prev ? {...prev, certificate: e.target.value} : null)}
-                          className="w-full min-h-[120px] rounded-xl border border-zinc-100 bg-zinc-50 p-5 text-base text-zinc-900 font-bold focus:bg-white focus:ring-4 focus:ring-[#2D3A2D]/10 outline-none transition-all resize-none"
+                          className="w-full min-h-[120px] rounded-xl border border-zinc-100 bg-zinc-50 p-5 text-base text-zinc-600 font-medium focus:bg-white focus:ring-4 focus:ring-[#166534]/10 outline-none transition-all resize-none"
                         />
                       </div>
                     </div>
-                    <DialogFooter>
-                      <DialogClose render={<Button onClick={saveEditedPerson} className="h-12 w-full bg-[#2D3A2D] hover:bg-[#3A4A3A] rounded-xl font-bold text-white text-base shadow-lg transition-all active:scale-[0.98]" />}>
+                    <DialogFooter className="p-0 mt-4 sm:justify-center">
+                      <DialogClose render={<Button onClick={saveEditedPerson} className="h-12 w-full bg-[#166534] hover:bg-[#14532d] rounded-xl font-bold text-white text-base shadow-lg transition-all active:scale-[0.98]" />}>
                         Lưu thay đổi
                       </DialogClose>
                     </DialogFooter>
@@ -352,11 +332,11 @@ export default function App() {
                 </div>
                 
                 <div className="flex gap-2">
-                  <Button variant="secondary" size="sm" onClick={downloadTemplate} className="flex-1 h-9 rounded-xl bg-[#2D3A2D] hover:bg-[#3A4A3A] text-white text-[10px] font-bold uppercase tracking-wider transition-all">
+                  <Button variant="secondary" size="sm" onClick={downloadTemplate} className="flex-1 h-9 rounded-xl bg-[#166534] hover:bg-[#14532d] text-white text-[10px] font-bold uppercase tracking-wider transition-all">
                     <Download className="w-3 h-3 mr-1.5" /> Tải biểu mẫu
                   </Button>
                   <div className="flex-1 relative">
-                    <Button variant="secondary" size="sm" className="w-full h-9 rounded-xl bg-[#2D3A2D] hover:bg-[#3A4A3A] text-white text-[10px] font-bold uppercase tracking-wider transition-all">
+                    <Button variant="secondary" size="sm" className="w-full h-9 rounded-xl bg-[#166534] hover:bg-[#14532d] text-white text-[10px] font-bold uppercase tracking-wider transition-all">
                       <Upload className="w-3 h-3 mr-1.5" /> Nhập Excel
                     </Button>
                     <input 
@@ -377,7 +357,7 @@ export default function App() {
                         <Checkbox 
                            checked={filteredPeople.length > 0 && filteredPeople.every(p => selectedIds.has(p.id))}
                            onCheckedChange={toggleSelectAll}
-                           className="w-4 h-4 border-zinc-300 data-[state=checked]:bg-[#2D3A2D] data-[state=checked]:border-[#2D3A2D] rounded-md"
+                           className="w-4 h-4 border-zinc-300 data-[state=checked]:bg-[#166534] data-[state=checked]:border-[#166534] rounded-md"
                         />
                       </TableHead>
                       <TableHead className="font-bold text-zinc-700 text-[11px] py-2 uppercase tracking-wider">Tổ chuyên gia</TableHead>
@@ -393,12 +373,16 @@ export default function App() {
                       </TableRow>
                     )}
                     {filteredPeople.map((p, index) => (
-                      <TableRow key={p.id} className={`group border-b border-zinc-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-zinc-50/30'} hover:bg-[#2D3A2D]/5`}>
-                        <TableCell className="text-center px-1 py-3">
+                      <TableRow 
+                        key={p.id} 
+                        className={`group border-b border-zinc-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-zinc-50/30'} hover:bg-[#166534]/5 cursor-pointer`}
+                        onClick={() => toggleSelect(p.id)}
+                      >
+                        <TableCell className="text-center px-1 py-3" onClick={(e) => e.stopPropagation()}>
                           <Checkbox 
                             checked={selectedIds.has(p.id)}
                             onCheckedChange={() => toggleSelect(p.id)}
-                            className="w-4 h-4 border-zinc-300 data-[state=checked]:bg-[#2D3A2D] data-[state=checked]:border-[#2D3A2D] rounded-md"
+                            className="w-4 h-4 border-zinc-300 data-[state=checked]:bg-[#166534] data-[state=checked]:border-[#166534] rounded-md"
                           />
                         </TableCell>
                         <TableCell className="py-3 pr-2">
@@ -406,52 +390,52 @@ export default function App() {
                             {p.name || 'Chưa nhập tên'}
                           </span>
                         </TableCell>
-                        <TableCell className="py-2 text-center">
+                        <TableCell className="py-2 text-center" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-center gap-1">
                             <Dialog>
                               <DialogTrigger render={<Button 
                                 variant="ghost" 
                                 size="icon" 
                                 className="h-8 w-8 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg"
-                                onClick={() => handleEditPerson(p)}
+                                onClick={(e) => { e.stopPropagation(); handleEditPerson(p); }}
                               />}>
                                 <Edit className="w-4 h-4" />
                               </DialogTrigger>
-                              <DialogContent className="sm:max-w-[550px] rounded-[2rem] bg-white border-zinc-100 shadow-2xl p-8 text-zinc-900">
+                              <DialogContent className="sm:max-w-[550px] rounded-[2rem] bg-white border-zinc-100 shadow-2xl p-8 text-zinc-700">
                                 <DialogHeader>
-                                  <DialogTitle className="text-xl font-bold text-zinc-900 tracking-tight">Chỉnh sửa thông tin</DialogTitle>
+                                  <DialogTitle className="text-xl font-bold text-zinc-700 tracking-tight">Chỉnh sửa thông tin</DialogTitle>
                                 </DialogHeader>
                                 <div className="grid gap-6 py-6">
                                   <div className="grid gap-2">
-                                    <Label htmlFor="edit-name" className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Họ và tên</Label>
+                                    <Label htmlFor="edit-name" className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Họ và tên</Label>
                                     <Input 
                                       id="edit-name" 
                                       value={editingPerson?.name || ''} 
                                       onChange={e => setEditingPerson(prev => prev ? {...prev, name: e.target.value} : null)}
-                                      className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-900 font-bold text-base px-5 focus:bg-white focus:ring-4 focus:ring-zinc-900/10 transition-all"
+                                      className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-600 font-medium text-base px-5 focus:bg-white focus:ring-4 focus:ring-[#166534]/10 transition-all"
                                     />
                                   </div>
                                   <div className="grid gap-2">
-                                    <Label htmlFor="edit-cccd" className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Số CCCD</Label>
+                                    <Label htmlFor="edit-cccd" className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Số CCCD</Label>
                                     <Input 
                                       id="edit-cccd" 
                                       value={editingPerson?.cccd || ''} 
                                       onChange={e => setEditingPerson(prev => prev ? {...prev, cccd: e.target.value} : null)}
-                                      className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-900 font-bold text-base px-5 focus:bg-white focus:ring-4 focus:ring-zinc-900/10 transition-all"
+                                      className="h-12 rounded-xl bg-zinc-50 border-zinc-100 text-zinc-600 font-medium text-base px-5 focus:bg-white focus:ring-4 focus:ring-[#166534]/10 transition-all"
                                     />
                                   </div>
                                   <div className="grid gap-2">
-                                    <Label htmlFor="edit-cert" className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Chứng chỉ nghiệp vụ</Label>
+                                    <Label htmlFor="edit-cert" className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Chứng chỉ nghiệp vụ</Label>
                                     <textarea 
                                       id="edit-cert" 
                                       value={editingPerson?.certificate || ''} 
                                       onChange={e => setEditingPerson(prev => prev ? {...prev, certificate: e.target.value} : null)}
-                                      className="w-full min-h-[120px] rounded-xl border border-zinc-100 bg-zinc-50 p-5 text-base text-zinc-900 font-bold focus:bg-white focus:ring-4 focus:ring-zinc-900/10 outline-none transition-all resize-none"
+                                      className="w-full min-h-[120px] rounded-xl border border-zinc-100 bg-zinc-50 p-5 text-base text-zinc-600 font-medium focus:bg-white focus:ring-4 focus:ring-[#166534]/10 outline-none transition-all resize-none"
                                     />
                                   </div>
                                 </div>
-                                <DialogFooter>
-                                  <DialogClose render={<Button onClick={saveEditedPerson} className="h-12 w-full bg-[#2D3A2D] hover:bg-[#3A4A3A] rounded-xl font-bold text-white text-base shadow-lg transition-all active:scale-[0.98]" />}>
+                                <DialogFooter className="p-0 mt-4 sm:justify-center">
+                                  <DialogClose render={<Button onClick={saveEditedPerson} className="h-12 w-full bg-[#166534] hover:bg-[#14532d] rounded-xl font-bold text-white text-base shadow-lg transition-all active:scale-[0.98]" />}>
                                     Lưu thay đổi
                                   </DialogClose>
                                 </DialogFooter>
@@ -461,7 +445,7 @@ export default function App() {
                               variant="ghost" 
                               size="icon" 
                               className="h-8 w-8 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                              onClick={() => removePerson(p.id)}
+                              onClick={(e) => { e.stopPropagation(); removePerson(p.id); }}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -475,16 +459,17 @@ export default function App() {
             </Card>
 
             {/* Section 3: Ngày cam kết */}
-            <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden shrink-0">
+            <div className="bg-white rounded-2xl border-2 border-yellow-400/50 shadow-md overflow-hidden shrink-0 transition-all hover:shadow-2xl hover:scale-[1.01] hover:border-yellow-400">
               <div className="py-3 px-5 bg-yellow-400 border-b border-yellow-500">
                 <Label className="text-sm font-bold text-zinc-900 uppercase tracking-wider flex items-center gap-2">
-                  3. Ngày cam kết
+                  <div className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center text-[10px]">3</div>
+                  Ngày cam kết
                 </Label>
               </div>
-              <div className="p-5 flex gap-3">
-                <Input id="day" value={day} onChange={e => setDay(e.target.value)} placeholder="Ngày" maxLength={2} className="h-10 rounded-xl text-center font-bold text-zinc-900 bg-zinc-50/50 border-zinc-100 text-xs placeholder:text-zinc-400 focus:bg-white transition-all" />
-                <Input id="month" value={month} onChange={e => setMonth(e.target.value)} placeholder="Tháng" maxLength={2} className="h-10 rounded-xl text-center font-bold text-zinc-900 bg-zinc-50/50 border-zinc-100 text-xs placeholder:text-zinc-400 focus:bg-white transition-all" />
-                <Input id="year" value={year} onChange={e => setYear(e.target.value)} placeholder="Năm" maxLength={4} className="h-10 rounded-xl text-center font-bold text-zinc-900 bg-zinc-50/50 border-zinc-100 text-xs placeholder:text-zinc-400 focus:bg-white transition-all" />
+              <div className="p-5 flex gap-3 bg-zinc-50/30">
+                <Input id="day" value={day} onChange={e => setDay(e.target.value)} placeholder="Ngày" maxLength={2} className="h-10 rounded-xl text-center font-bold text-zinc-900 bg-white border-zinc-100 text-xs placeholder:text-zinc-400 focus:bg-white transition-all" />
+                <Input id="month" value={month} onChange={e => setMonth(e.target.value)} placeholder="Tháng" maxLength={2} className="h-10 rounded-xl text-center font-bold text-zinc-900 bg-white border-zinc-100 text-xs placeholder:text-zinc-400 focus:bg-white transition-all" />
+                <Input id="year" value={year} onChange={e => setYear(e.target.value)} placeholder="Năm" maxLength={4} className="h-10 rounded-xl text-center font-bold text-zinc-900 bg-white border-zinc-100 text-xs placeholder:text-zinc-400 focus:bg-white transition-all" />
               </div>
             </div>
           </div>
@@ -492,7 +477,7 @@ export default function App() {
 
         <div className="p-6 border-t border-zinc-100 bg-white flex flex-col gap-4 shrink-0">
           <Button 
-            className="w-full h-14 text-base font-bold bg-[#2D3A2D] hover:bg-[#3A4A3A] text-white shadow-lg shadow-[#2D3A2D]/20 rounded-2xl transition-all disabled:opacity-50 active:scale-[0.98]" 
+            className="w-full h-14 text-base font-bold bg-yellow-400 hover:bg-yellow-500 text-zinc-900 shadow-lg shadow-yellow-400/20 rounded-2xl transition-all disabled:opacity-50 active:scale-[0.98]" 
             onClick={handleExportWord}
             disabled={selectedPeople.length === 0 || isExportingWord}
           >
@@ -575,7 +560,7 @@ function DocumentContent({ person, packageName, decision, day, month, year }: { 
         <div className="whitespace-nowrap text-[14pt]">Số: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/TCG</div>
         <div className="flex flex-col">
           <div className="italic whitespace-nowrap text-center text-[14pt]">
-            An Hội Đông, ngày {day ? day : <span className="text-red-600">(6)</span>} tháng {month ? month : <span className="text-red-600">(7)</span>} năm {year ? year : <span className="text-red-600">(8)</span>}
+            An Hội Đông, ngày {day ? day : '...'} tháng {month ? month : '...'} năm {year ? year : '....'}
           </div>
           <div className="font-bold text-right text-[14pt]">Phụ lục 06</div>
           <div className="italic text-right text-[14pt]">(Theo TT 79/TT-BTC ngày 04/8/2025)</div>
@@ -594,7 +579,7 @@ function DocumentContent({ person, packageName, decision, day, month, year }: { 
       </div>
 
       <div className="text-justify mb-2 text-[14pt]" style={{ textIndent: '2rem' }}>
-        Là thành viên của tổ chuyên gia đánh giá E-HSDT/hồ sơ dự thầu gói thầu “{packageName ? packageName : <span className="text-red-600">(3)</span>}” theo {decision ? decision : <span className="text-red-600">(4)</span>} của Công ty Điện lực Gia Định. Tôi được cấp chứng chỉ nghiệp vụ chuyên môn về đấu thầu số: {person.certificate ? person.certificate : <span className="text-red-600">(5)</span>}.
+        Là thành viên của tổ chuyên gia đánh giá E-HSDT/hồ sơ dự thầu gói thầu “{packageName ? packageName : '................................'}” theo {decision ? decision : '................................'} của Công ty Điện lực Gia Định. Tôi được cấp chứng chỉ nghiệp vụ chuyên môn về đấu thầu số: {person.certificate ? person.certificate : <span className="text-red-600">(5)</span>}.
       </div>
 
       <div className="mb-2 text-[14pt]" style={{ textIndent: '2rem' }}>Tôi cam kết như sau:</div>
@@ -621,7 +606,7 @@ function DocumentContent({ person, packageName, decision, day, month, year }: { 
 
       <div className="flex justify-end mb-8">
         <div className="text-center w-[400px]">
-          <div className="mb-1 text-[14pt]">An Hội Đông, ngày {day ? day : <span className="text-red-600">(6)</span>} tháng {month ? month : <span className="text-red-600">(7)</span>} năm {year ? year : <span className="text-red-600">(8)</span>}</div>
+          <div className="mb-1 text-[14pt]">An Hội Đông, ngày {day ? day : '...'} tháng {month ? month : '...'} năm {year ? year : '....'}</div>
           <div className="font-bold text-[14pt]">Người cam kết</div>
           <div className="italic mb-32 text-[14pt]">(Ký và ghi rõ họ tên)</div>
           <div className="font-bold text-[14pt]">{person.name ? person.name : <span className="text-red-600">(1)</span>}</div>
