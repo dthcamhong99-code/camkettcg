@@ -31,26 +31,7 @@ interface Person {
   certificate: string;
 }
 
-const INITIAL_PEOPLE: Person[] = [
-  {
-    id: '1',
-    name: 'Đặng Thị Cẩm Hồng',
-    cccd: '089195020158',
-    certificate: 'HCM.NT01.01.0415 ngày 02/02/2026 do Trường Đại học Tài Chính - Marketing cấp tại TP.HCM',
-  },
-  {
-    id: '2',
-    name: 'Phạm Nguyễn Hoàng Thông',
-    cccd: '079084027523',
-    certificate: 'HCM.NT01.01.0415 ngày 02/02/2026 do Trường Đại học Tài Chính - Marketing cấp tại TP.HCM',
-  },
-  {
-    id: '3',
-    name: 'Nguyễn Việt Dũng',
-    cccd: '079086033564',
-    certificate: 'Chứng chỉ đấu thầu số 123/2024 do Bộ Kế hoạch và Đầu tư cấp',
-  }
-];
+const INITIAL_PEOPLE: Person[] = [];
 
 const DEEP_BLACK = '#000000';
 const DEEP_BLACK_HOVER = '#1A1A1A';
