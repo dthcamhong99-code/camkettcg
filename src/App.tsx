@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Filter, ChevronDown, FileText, FileDown, Search, Edit, ZoomIn, ZoomOut, Maximize2, X, Upload, Download } from 'lucide-react';
+import { Plus, Trash2, Filter, ChevronDown, FileText, FileDown, Search, Edit, ZoomIn, ZoomOut, Maximize2, X, Upload, Download, RotateCcw } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuCheckboxItem, 
@@ -237,11 +237,20 @@ export default function App() {
           <div className="p-4 flex flex-col gap-4">
             {/* Section 1: Thông tin gói thầu */}
             <Card className="border-2 border-yellow-400/50 shadow-md rounded-2xl overflow-hidden bg-white shrink-0 transition-all hover:shadow-2xl hover:scale-[1.01] hover:border-yellow-400">
-              <CardHeader className="py-3 px-5 bg-yellow-400 border-b border-yellow-500">
+              <CardHeader className="py-3 px-5 bg-yellow-400 border-b border-yellow-500 flex flex-row items-center justify-between">
                 <CardTitle className="text-sm font-bold text-zinc-900 flex items-center gap-2 uppercase tracking-wider">
                   <div className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center text-[10px]">1</div>
                   Thông tin gói thầu
                 </CardTitle>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { setPackageName(''); setDecision(''); }}
+                  className="h-8 w-8 p-0 text-zinc-900 hover:bg-zinc-900/10 rounded-lg"
+                  title="Nhập mới"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
               </CardHeader>
               <CardContent className="space-y-4 p-5 bg-zinc-50/30">
                 <div className="space-y-2">
@@ -460,11 +469,20 @@ export default function App() {
 
             {/* Section 3: Ngày cam kết */}
             <div className="bg-white rounded-2xl border-2 border-yellow-400/50 shadow-md overflow-hidden shrink-0 transition-all hover:shadow-2xl hover:scale-[1.01] hover:border-yellow-400">
-              <div className="py-3 px-5 bg-yellow-400 border-b border-yellow-500">
+              <div className="py-3 px-5 bg-yellow-400 border-b border-yellow-500 flex flex-row items-center justify-between">
                 <Label className="text-sm font-bold text-zinc-900 uppercase tracking-wider flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-zinc-900 text-white flex items-center justify-center text-[10px]">3</div>
                   Ngày cam kết
                 </Label>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { setDay(''); setMonth(''); setYear(''); }}
+                  className="h-8 w-8 p-0 text-zinc-900 hover:bg-zinc-900/10 rounded-lg"
+                  title="Nhập mới"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
               </div>
               <div className="p-5 flex gap-3 bg-zinc-50/30">
                 <Input id="day" value={day} onChange={e => setDay(e.target.value)} placeholder="Ngày" maxLength={2} className="h-10 rounded-xl text-center font-bold text-zinc-900 bg-white border-zinc-100 text-xs placeholder:text-zinc-400 focus:bg-white transition-all" />
