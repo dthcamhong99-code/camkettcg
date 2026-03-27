@@ -402,10 +402,9 @@ export default function App() {
                           />
                         </TableCell>
                         <TableCell className="py-3 pr-2">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-bold text-zinc-900 truncate max-w-[180px]">{p.name || 'Chưa nhập tên'}</span>
-                            <span className="text-[11px] font-medium text-zinc-500 font-mono tracking-wider">{p.cccd || 'Số CCCD...'}</span>
-                          </div>
+                          <span className="text-sm font-bold text-zinc-900 truncate max-w-[180px] block">
+                            {p.name || 'Chưa nhập tên'}
+                          </span>
                         </TableCell>
                         <TableCell className="py-2 text-center">
                           <div className="flex items-center justify-center gap-1">

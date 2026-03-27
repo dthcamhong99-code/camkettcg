@@ -6,9 +6,9 @@ export const exportToWord = async (people: any[], packageName: string, decision:
     throw new Error("Không có dữ liệu nhân sự để xuất.");
   }
 
-  const children: any[] = [];
+  for (const person of people) {
+    const children: any[] = [];
 
-  people.forEach((person, index) => {
     children.push(
       new Paragraph({
         children: [
@@ -191,29 +191,31 @@ export const exportToWord = async (people: any[], packageName: string, decision:
       })
     );
 
-    if (index < people.length - 1) {
-      children.push(new Paragraph({ children: [new PageBreak()] }));
-    }
-  });
-
-  const doc = new Document({
-    sections: [
-      {
-        properties: {
-          page: {
-            margin: {
-              top: 1134, // 2cm
-              right: 1134, // 2cm
-              bottom: 1134, // 2cm
-              left: 1701, // 3cm
+    const doc = new Document({
+      sections: [
+        {
+          properties: {
+            page: {
+              margin: {
+                top: 1134, // 2cm
+                right: 1134, // 2cm
+                bottom: 1134, // 2cm
+                left: 1701, // 3cm
+              },
             },
           },
+          children: children,
         },
-        children: children,
-      },
-    ],
-  });
+      ],
+    });
 
-  const blob = await Packer.toBlob(doc);
-  saveAs(blob, `Ban_Cam_Ket_${new Date().getTime()}.docx`);
+    const blob = await Packer.toBlob(doc);
+    const fileName = `Ban_Cam_Ket_${person.name?.replace(/\s+/g, '_') || 'Chuyen_Gia'}.docx`;
+    saveAs(blob, fileName);
+    
+    // Small delay to avoid browser blocking multiple downloads
+    if (people.length > 1) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
 };
