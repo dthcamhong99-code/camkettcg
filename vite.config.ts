@@ -7,7 +7,6 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base:'/camkettcg/',
     base: './',
     plugins: [
       react(), 
@@ -15,8 +14,8 @@ export default defineConfig(({mode}) => {
       VitePWA({
         registerType: 'autoUpdate',
         manifest: {
-          name: 'Cam Kết Đấu Thầu',
-          short_name: 'CamKết',
+          name: 'Cam kết TCG',
+          short_name: 'Cam kết TCG',
           description: 'Ứng dụng quản lý cam kết tổ chuyên gia đấu thầu',
           theme_color: '#facc15',
           background_color: '#ffffff',
