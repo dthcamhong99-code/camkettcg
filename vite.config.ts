@@ -7,7 +7,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base:'/camkettcg/',
+    base: './',
     plugins: [
       react(), 
       tailwindcss(),
@@ -20,15 +20,16 @@ export default defineConfig(({mode}) => {
           theme_color: '#facc15',
           background_color: '#ffffff',
           display: 'standalone',
+          start_url: '.',
           icons: [
             {
-              src: '/icon.svg',
+              src: 'icon.svg',
               sizes: '192x192',
               type: 'image/svg+xml',
               purpose: 'any maskable'
             },
             {
-              src: '/icon.svg',
+              src: 'icon.svg',
               sizes: '512x512',
               type: 'image/svg+xml',
               purpose: 'any maskable'
