@@ -148,8 +148,15 @@ export const exportToWord = async (people: any[], packageName: string, decision:
           new TableRow({
             children: [
               new TableCell({
-                children: [],
-                width: { size: 40, type: WidthType.PERCENTAGE },
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: "Nơi nhận:", bold: true, italics: true, size: 24, font: "Times New Roman" }),
+                      new TextRun({ text: " TCG", size: 24, font: "Times New Roman" }),
+                    ],
+                  }),
+                ],
+                width: { size: 45, type: WidthType.PERCENTAGE },
               }),
               new TableCell({
                 children: [
@@ -183,7 +190,7 @@ export const exportToWord = async (people: any[], packageName: string, decision:
                     alignment: AlignmentType.CENTER,
                   }),
                 ],
-                width: { size: 60, type: WidthType.PERCENTAGE },
+                width: { size: 55, type: WidthType.PERCENTAGE },
               }),
             ],
           }),

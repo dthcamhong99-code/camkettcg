@@ -603,9 +603,12 @@ function DocumentContent({ person, packageName, decision, day, month, year }: { 
         Nếu tôi vi phạm nội dung cam kết nêu trên, tôi xin chịu trách nhiệm trước pháp luật./.
       </div>
 
-      <div className="flex justify-end mb-8">
-        <div className="text-center w-[400px]">
-          <div className="mb-1 text-[14pt]">An Hội Đông, ngày {day ? day : '...'} tháng {month ? month : '...'} năm {year ? year : '....'}</div>
+      <div className="flex justify-between items-start mb-8">
+        <div className="text-[12pt]">
+          <span className="font-bold italic">Nơi nhận:</span> TCG
+        </div>
+        <div className="text-center w-[380px]">
+          <div className="mb-1 text-[14pt] whitespace-nowrap">An Hội Đông, ngày {day ? day : '...'} tháng {month ? month : '...'} năm {year ? year : '....'}</div>
           <div className="font-bold text-[14pt]">Người cam kết</div>
           <div className="italic mb-32 text-[14pt]">(Ký và ghi rõ họ tên)</div>
           <div className="font-bold text-[14pt]">{person.name ? person.name : <span className="text-red-600">(1)</span>}</div>
