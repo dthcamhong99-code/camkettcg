@@ -206,7 +206,7 @@ export default function App() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-3 text-zinc-900">
               <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-[#166534]/20">
-                <img src="./app-icon-v3-192x192.png" alt="Logo" className="w-full h-full object-cover" />
+                <img src="https://sf-static.upanhlaylink.com/img/image_20260329e653d2cb7260ff048a889fe07a0ebc3f.jpg" alt="Logo" className="w-full h-full object-cover" />
               </div>
               Tạo Bản Cam Kết
             </h1>
