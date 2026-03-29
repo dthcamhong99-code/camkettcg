@@ -205,8 +205,8 @@ export default function App() {
         <div className="p-6 bg-white border-b border-zinc-100 shrink-0 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-3 text-zinc-900">
-              <div className="p-2 bg-[#166534] rounded-xl shadow-lg shadow-[#166534]/20">
-                <FileText className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-[#166534]/20">
+                <img src="./app-icon-v3-192x192.png" alt="Logo" className="w-full h-full object-cover" />
               </div>
               Tạo Bản Cam Kết
             </h1>
