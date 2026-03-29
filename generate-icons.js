@@ -14,16 +14,16 @@ async function generateIcons() {
     await sharp(svgBuffer)
       .resize(192, 192)
       .png()
-      .toFile(path.join(__dirname, 'public', 'app-icon-v4-192x192.png'));
+      .toFile(path.join(__dirname, 'public', 'app-icon-v5-192x192.png'));
     
-    console.log('Generated app-icon-v4-192x192.png');
+    console.log('Generated app-icon-v5-192x192.png');
 
     await sharp(svgBuffer)
       .resize(512, 512)
       .png()
-      .toFile(path.join(__dirname, 'public', 'app-icon-v4-512x512.png'));
+      .toFile(path.join(__dirname, 'public', 'app-icon-v5-512x512.png'));
       
-    console.log('Generated app-icon-v4-512x512.png');
+    console.log('Generated app-icon-v5-512x512.png');
   } catch (error) {
     console.error('Error generating icons:', error);
   }
