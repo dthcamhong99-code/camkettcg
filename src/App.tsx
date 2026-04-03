@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Filter, ChevronDown, FileText, FileDown, Search, Edit, ZoomIn, ZoomOut, Maximize2, X, Upload, Download, RotateCcw } from 'lucide-react';
+import { Plus, Trash2, Filter, ChevronDown, FileText, FileDown, Search, Edit, ZoomIn, ZoomOut, Maximize2, X, Upload, Download, RotateCcw, Lock, LogOut } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuCheckboxItem, 
@@ -37,9 +37,42 @@ const DEEP_BLACK = '#000000';
 const DEEP_BLACK_HOVER = '#1A1A1A';
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
   // Local persistence keys
   const STORAGE_KEY_PEOPLE = 'camket_people';
   const STORAGE_KEY_FORM = 'camket_form';
+  const STORAGE_KEY_AUTH = 'camket_auth';
+
+  const CORRECT_PASSWORD = import.meta.env.VITE_APP_PASSWORD || '@123';
+
+  // Check auth on mount
+  useEffect(() => {
+    const savedAuth = localStorage.getItem(STORAGE_KEY_AUTH);
+    if (savedAuth === 'true') {
+      setIsAuthenticated(true);
+    }
+    setIsAuthLoading(false);
+  }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === CORRECT_PASSWORD) {
+      setIsAuthenticated(true);
+      localStorage.setItem(STORAGE_KEY_AUTH, 'true');
+      setError('');
+    } else {
+      setError('Mật khẩu không chính xác. Vui lòng thử lại.');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem(STORAGE_KEY_AUTH);
+  };
 
   const [people, setPeople] = useState<Person[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -198,6 +231,61 @@ export default function App() {
 
   const selectedPeople = filteredPeople.filter(p => selectedIds.has(p.id));
 
+  if (isAuthLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-zinc-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-zinc-100 font-sans">
+        <Card className="w-full max-w-md border-2 border-yellow-400/50 shadow-2xl rounded-[2rem] overflow-hidden bg-white">
+          <CardHeader className="bg-yellow-400 p-8 text-center border-b border-yellow-500">
+            <div className="flex justify-center mb-4">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-xl bg-white p-2">
+                <img src="https://sf-static.upanhlaylink.com/img/image_20260329e653d2cb7260ff048a889fe07a0ebc3f.jpg" alt="Logo" className="w-full h-full object-contain" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold text-zinc-900 uppercase tracking-tight">Truy cập ứng dụng</CardTitle>
+            <p className="text-zinc-800 text-xs font-medium mt-2 italic">Vui lòng nhập mật khẩu để tiếp tục</p>
+          </CardHeader>
+          <CardContent className="p-8">
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="password-field" className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Mật khẩu</Label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+                  <Input 
+                    id="password-field"
+                    type="password" 
+                    placeholder="Nhập mật khẩu..." 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-14 pl-12 rounded-2xl border-zinc-200 bg-zinc-50 focus:bg-white focus:border-yellow-400 focus:ring-4 focus:ring-yellow-400/10 transition-all text-lg font-medium"
+                    autoFocus
+                  />
+                </div>
+                {error && <p className="text-red-500 text-xs font-bold mt-2 animate-bounce">{error}</p>}
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full h-14 bg-yellow-400 hover:bg-yellow-500 text-zinc-900 font-bold text-lg rounded-2xl shadow-lg shadow-yellow-400/20 transition-all active:scale-[0.98]"
+              >
+                Đăng nhập
+              </Button>
+            </form>
+          </CardContent>
+          <div className="p-6 bg-zinc-50 border-t border-zinc-100 text-center">
+            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">© 2026 Cam Kết Tổ Chuyên Gia</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-zinc-100 overflow-hidden font-sans selection:bg-[#000000]/10 selection:text-zinc-900 text-zinc-900">
       {/* Sidebar / Controls */}
@@ -212,6 +300,15 @@ export default function App() {
             </h1>
             <p className="text-xs text-zinc-500 mt-2 font-medium italic">Hệ thống tạo nhanh Cam kết Tổ chuyên gia</p>
           </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleLogout}
+            className="h-10 w-10 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+            title="Đăng xuất"
+          >
+            <LogOut className="w-5 h-5" />
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar">
