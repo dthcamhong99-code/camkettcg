@@ -659,7 +659,7 @@ function DocumentContent({ person, packageName, decision, day, month, year }: { 
             An Hội Đông, ngày {day ? day : '...'} tháng {month ? month : '...'} năm {year ? year : '....'}
           </div>
           <div className="font-bold text-right text-[14pt]">Phụ lục 06</div>
-          <div className="italic text-right text-[14pt]">(Theo TT 79/TT-BTC ngày 04/8/2025)</div>
+          <div className="italic text-right text-[14pt]">(Theo Thông tư 79/2025/TT-BTC ngày 04/8/2025)</div>
         </div>
       </div>
 
@@ -707,7 +707,7 @@ function DocumentContent({ person, packageName, decision, day, month, year }: { 
         <div className="text-center w-[380px]">
           <div className="mb-1 text-[14pt] whitespace-nowrap">An Hội Đông, ngày {day ? day : '...'} tháng {month ? month : '...'} năm {year ? year : '....'}</div>
           <div className="font-bold text-[14pt]">Người cam kết</div>
-          <div className="italic mb-32 text-[14pt]">(Ký và ghi rõ họ tên)</div>
+          <div className="italic mb-40 text-[14pt]">(Ký và ghi rõ họ tên)</div>
           <div className="font-bold text-[14pt]">{person.name ? person.name : <span className="text-red-600">(1)</span>}</div>
         </div>
       </div>

@@ -37,7 +37,7 @@ export const exportToWord = async (people: any[], packageName: string, decision:
       }),
       new Paragraph({
         children: [
-          new TextRun({ text: "(Theo TT 79/TT-BTC ngày 04/8/2025)", italics: true, size: 28, font: "Times New Roman" }),
+          new TextRun({ text: "(Theo Thông tư 79/2025/TT-BTC ngày 04/8/2025)", italics: true, size: 28, font: "Times New Roman" }),
         ],
         alignment: AlignmentType.RIGHT,
         spacing: { after: 400 },
@@ -181,7 +181,7 @@ export const exportToWord = async (people: any[], packageName: string, decision:
                       new TextRun({ text: "(Ký và ghi rõ họ tên)", italics: true, size: 28, font: "Times New Roman" }),
                     ],
                     alignment: AlignmentType.CENTER,
-                    spacing: { after: 1200 },
+                    spacing: { after: 1800 },
                   }),
                   new Paragraph({
                     children: [
