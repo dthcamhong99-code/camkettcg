@@ -74,14 +74,39 @@ export default function App() {
     localStorage.removeItem(STORAGE_KEY_AUTH);
   };
 
-  const [people, setPeople] = useState<Person[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [people, setPeople] = useState<Person[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_PEOPLE);
+    return saved ? JSON.parse(saved) : INITIAL_PEOPLE;
+  });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
+    const savedForm = localStorage.getItem(STORAGE_KEY_FORM);
+    if (savedForm) {
+      const form = JSON.parse(savedForm);
+      return new Set(form.selectedIds || []);
+    }
+    return new Set();
+  });
 
-  const [packageName, setPackageName] = useState('');
-  const [decision, setDecision] = useState('');
-  const [day, setDay] = useState('');
-  const [month, setMonth] = useState('');
-  const [year, setYear] = useState('');
+  const [packageName, setPackageName] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_FORM);
+    return saved ? JSON.parse(saved).packageName || '' : '';
+  });
+  const [decision, setDecision] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_FORM);
+    return saved ? JSON.parse(saved).decision || '' : '';
+  });
+  const [day, setDay] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_FORM);
+    return saved ? JSON.parse(saved).day || '' : '';
+  });
+  const [month, setMonth] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_FORM);
+    return saved ? JSON.parse(saved).month || '' : '';
+  });
+  const [year, setYear] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_FORM);
+    return saved ? JSON.parse(saved).year || '' : '';
+  });
 
   const [selectedFilterNames, setSelectedFilterNames] = useState<string[]>([]);
   const [filterSearchTerm, setFilterSearchTerm] = useState('');
@@ -89,27 +114,6 @@ export default function App() {
   const [isExportingWord, setIsExportingWord] = useState(false);
   const [previewScale, setPreviewScale] = useState(0.8);
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedPeople = localStorage.getItem(STORAGE_KEY_PEOPLE);
-    if (savedPeople) {
-      setPeople(JSON.parse(savedPeople));
-    } else {
-      setPeople(INITIAL_PEOPLE);
-    }
-
-    const savedForm = localStorage.getItem(STORAGE_KEY_FORM);
-    if (savedForm) {
-      const form = JSON.parse(savedForm);
-      setPackageName(form.packageName || '');
-      setDecision(form.decision || '');
-      setDay(form.day || '');
-      setMonth(form.month || '');
-      setYear(form.year || '');
-      setSelectedIds(new Set(form.selectedIds || []));
-    }
-  }, []);
 
   // Save to localStorage on changes
   useEffect(() => {
