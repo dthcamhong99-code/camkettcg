@@ -27,7 +27,7 @@ export const exportToWord = async (people: any[], packageName: string, decision:
             position: 9072, // 160mm in twips (210 - 30 - 20 = 160)
           },
         ],
-        spacing: { after: 200 },
+        spacing: { after: 150 },
       }),
       new Paragraph({
         children: [
@@ -40,14 +40,14 @@ export const exportToWord = async (people: any[], packageName: string, decision:
           new TextRun({ text: "(Theo Thông tư 79/2025/TT-BTC ngày 04/8/2025)", italics: true, size: 28, font: "Times New Roman" }),
         ],
         alignment: AlignmentType.RIGHT,
-        spacing: { after: 400 },
+        spacing: { after: 300 },
       }),
       new Paragraph({
         children: [
           new TextRun({ text: "BẢN CAM KẾT", bold: true, size: 32, font: "Times New Roman" }),
         ],
         alignment: AlignmentType.CENTER,
-        spacing: { after: 400 },
+        spacing: { after: 300 },
       }),
       new Paragraph({
         children: [
@@ -55,14 +55,14 @@ export const exportToWord = async (people: any[], packageName: string, decision:
           new TextRun({ text: person.name || '................................................', bold: true, size: 28, font: "Times New Roman" }),
         ],
         indent: { firstLine: 720 },
-        spacing: { after: 200 },
+        spacing: { after: 150 },
       }),
       new Paragraph({
         children: [
           new TextRun({ text: `Số Căn cước/CCCD/Hộ chiếu: ${person.cccd || '................................................'}`, size: 28, font: "Times New Roman" }),
         ],
         indent: { firstLine: 720 },
-        spacing: { after: 200 },
+        spacing: { after: 150 },
       }),
       new Paragraph({
         children: [
@@ -74,14 +74,14 @@ export const exportToWord = async (people: any[], packageName: string, decision:
         ],
         indent: { firstLine: 720 },
         alignment: AlignmentType.JUSTIFIED,
-        spacing: { after: 200 },
+        spacing: { after: 150 },
       }),
       new Paragraph({
         children: [
           new TextRun({ text: "Tôi cam kết như sau:", size: 28, font: "Times New Roman" }),
         ],
         indent: { firstLine: 720 },
-        spacing: { after: 200 },
+        spacing: { after: 150 },
       }),
       new Paragraph({
         children: [
@@ -89,7 +89,7 @@ export const exportToWord = async (people: any[], packageName: string, decision:
         ],
         indent: { firstLine: 720 },
         alignment: AlignmentType.JUSTIFIED,
-        spacing: { after: 200 },
+        spacing: { after: 150 },
       }),
       new Paragraph({
         children: [
@@ -97,7 +97,7 @@ export const exportToWord = async (people: any[], packageName: string, decision:
         ],
         indent: { firstLine: 720 },
         alignment: AlignmentType.JUSTIFIED,
-        spacing: { after: 200 },
+        spacing: { after: 150 },
       }),
       new Paragraph({
         children: [
@@ -105,7 +105,7 @@ export const exportToWord = async (people: any[], packageName: string, decision:
         ],
         indent: { firstLine: 720 },
         alignment: AlignmentType.JUSTIFIED,
-        spacing: { after: 200 },
+        spacing: { after: 150 },
       }),
       new Paragraph({
         children: [
@@ -113,7 +113,7 @@ export const exportToWord = async (people: any[], packageName: string, decision:
         ],
         indent: { firstLine: 720 },
         alignment: AlignmentType.JUSTIFIED,
-        spacing: { after: 200 },
+        spacing: { after: 150 },
       }),
       new Paragraph({
         children: [
@@ -121,7 +121,7 @@ export const exportToWord = async (people: any[], packageName: string, decision:
         ],
         indent: { firstLine: 720 },
         alignment: AlignmentType.JUSTIFIED,
-        spacing: { after: 400 },
+        spacing: { after: 300 },
       }),
       new Paragraph({
         children: [
@@ -129,7 +129,7 @@ export const exportToWord = async (people: any[], packageName: string, decision:
         ],
         indent: { firstLine: 720 },
         alignment: AlignmentType.JUSTIFIED,
-        spacing: { after: 400 },
+        spacing: { after: 300 },
       }),
       new Table({
         width: {
@@ -181,7 +181,7 @@ export const exportToWord = async (people: any[], packageName: string, decision:
                       new TextRun({ text: "(Ký và ghi rõ họ tên)", italics: true, size: 28, font: "Times New Roman" }),
                     ],
                     alignment: AlignmentType.CENTER,
-                    spacing: { after: 1800 },
+                    spacing: { after: 1700 },
                   }),
                   new Paragraph({
                     children: [
